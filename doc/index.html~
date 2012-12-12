@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Camera Calibration for Blender</title>
+</head>
+<body>
+<h1 style="text-align: center;">Camera Calibration for Blender</h1>
+<h2>Download (Note: Site is no longer live) </h2>
+You can get the latest version of the extension module and script
+bundle here (includes everything, even this documentation): <a
+ href="http://www.warpax.com/pytsai/index.html">http://www.warpax.com/pytsai/pytsai-0.1.tar.gz</a><br>
+<br>
+
+<h2>Download (With Binaries added by lobo_nz)</h2>
+You can get version 0.1 of the extension module and script
+bundle here (includes everything, even this documentation) 
+along with compiled binaries for linux and windows for python 2.4 and 2.5.
+Also now with support for loading images other than Raw Targa added by pix http://pix.test.at/ to the BlenderTsai.py
+The original blender gui script is still included as BlenderTsai_original.py<br/>
+This release is labeled 0.1b to distinguish from the original package and the previous package I released: <a href="http://blender.formworks.co.nz">http://blender.formworks.co.nz</a><br>
+<br>
+
+Once you've read this file, check out the tutorial: <a
+ href="tutorial.html">tutorial.html</a><br>
+<h2>Introduction</h2>
+Welcome to the wonderful world of camera calibration, direct from the
+comfort of your favourite 3D studio program: <a
+ href="http://www.blender.org/">Blender</a>!<br>
+<br>
+So what is camera calibration? Well, imagine that you have a real
+camera in the real world, and you have taken a picture of a real scene.
+Now imagine that you have modeled at least some of that real scene in
+Blender, using dimensions and angles from the real world. Let's suppose
+that you want to put a camera at the same location in the Blender
+scene, relative to the modeled objects, as the real camera occupied in
+the real scene, relative to the real objects. That's what camera
+calibration does for you! You can think of it as setting up a camera in
+a virtual scene at the same spot as the camera in a real scene. I'm
+sure you can think of many fun uses for that kind of technology,
+ne? :-)&nbsp; In the world of visual effects (I'm speaking from the
+experience of watching many DVD extras disks here :-), I've heard this
+method referred to by various names including <span
+ style="font-style: italic;">camera matching</span> and <span
+ style="font-style: italic;">camera tracking</span>. The current
+technique only works for still images so far, so it doesn't truly do
+camera "tracking" just yet (unless you're into manual labour in a <span
+ style="font-weight: bold;">big</span> way!).<br>
+<br>
+<img alt="Calibrating the Camera" title="Calibrating the Camera"
+ src="calibrate-camera.jpg" style="width: 526px; height: 366px;"><br>
+<br>
+In the current method, the parts of the scene that are modeled in
+Blender must be Empties. This is because they represent point
+locations. In the real world, they can be the corners of shapes,
+specially designed markers (eg: ping-pong balls), the corners of a
+checkerboard pattern on a plane, etc. These points, whose 3D locations
+are known, are called the <span style="font-style: italic;">calibration
+geometry</span> or <span style="font-style: italic;">calibration target</span>.&nbsp;
+Not all calibration geometry in the literature are point sets:
+sometimes other things such as sets of line segments are used. However,
+we are
+restricted to points in the current method. The task of matching up the
+points in the virtual scene with the points in the image of the real
+scene is called the <span style="font-style: italic;">correspondence
+problem</span>, and is solved manually here. The user
+of the script must select the Blender Empties and assign them a
+corresponding point in the image. Naturally, a funky GUI is supplied
+for just this purpose.<br>
+<br>
+Once the calibration target has been defined and corresponding image
+space points have been assigned, the camera can then be calibrated. The
+method determines two main sets of data about the camera. Firstly, it
+determines the position and orientation of the camera, which is a 6
+degree-of-freedom (DOF) quantity. The position and orientation are
+sometimes referred to as the <span style="font-style: italic;">exterior
+orientation</span> or <span style="font-style: italic;">exterior
+parameters</span> of the camera. The method also determines the Blender
+lens
+value of the camera, which is the <span style="font-style: italic;">interior
+orientation</span> or <span style="font-style: italic;">interior
+parameter</span>.&nbsp; Finally, the method does a first-order
+approximation for radial distortion of the image, supplying a centre of
+distortion and a single distortion constant. These last three
+parameters (Cx, Cy, kappa1) can be retrieved quite simply if required,
+but are currently ignored because Blender has no representation for
+them in its own camera model.<span style="font-weight: bold;"><br>
+</span>
+<h2><span style="font-weight: bold;"></span>What Makes Camera
+Calibration Difficult and How Do We Do It?</h2>
+If we take two sets of 3D points, and are asked to find a rigid body
+transformation which makes them align, it is a relatively easy task.
+There is an exact solutions available for three points, and a number of
+strategies available for minimizing the error from more than three
+points. A
+good, general, least-squares technique is given in this paper:<br>
+<br>
+<div style="margin-left: 40px;">Challis, J.H. (1995) A Procedure for
+Determining Rigid Body Transformation Parameters, J. Biomech.
+28(6):733-737.</div>
+<br>
+However, the problem in camera calibration is quite different. In
+camera calibration, we have <span style="font-style: italic;">lost</span>
+information about the 3D scene: specifically, how far the points are
+away from the camera, or their <span style="font-style: italic;">depth</span>.
+We are now no longer trying to find a mapping from 3D to 3D (which as
+pointed out above is quite simple), but instead we are trying to find a
+mapping from 3D to 2D. This loss of information complicates the problem
+tremendously!<br>
+<br>
+The technique used here was described by Roger Tsai:<br>
+<br>
+<div style="margin-left: 40px;">Tsai, R.Y. (1986) An Efficient and
+Accurate Camera Calibration Technique for 3D Machine Vision.
+Proceedings of IEEE Conference on Computer Vision and Pattern
+Recognition, Miami Beach, FL, pp. 364-374.<br>
+<br>
+Tsai, R.Y. (1987) A Versatile Camera Calibration Technique for
+High-Accuracy 3D Machine Vision Metrology Using Off-the-Shelf TV
+Cameras and Lenses. IEEE Journal of Robotics and Automation, Vol. RA-3,
+No. 4, pp. 323-344.</div>
+<br>
+Incidentally, if anyone has complete copies of those
+papers, can you <span style="font-style: italic;">please</span>
+(please, please, please...) send
+me copies?!&nbsp; I have partial, very poorly-photocopied versions. The
+code used as the basis for the current implementation was written by
+Reg Willson et al., and is available online here:<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://www-2.cs.cmu.edu/afs/cs.cmu.edu/user/rgw/www/TsaiCode.html">http://www-2.cs.cmu.edu/afs/cs.cmu.edu/user/rgw/www/TsaiCode.html</a><br>
+</div>
+<br>
+I simply wrote a Python wrapper around the C code available on that
+website, and modified it to continue (returning an error flag) when an
+error occurs, rather than bailing out instantly using the <code>exit()</code>
+function.<br>
+<h2>Using the Camera Calibration Script</h2>
+The camera calibration script depends upon a Python extension module
+which is a wrapper around the code listed above. This wrapper defines a
+Python module called <code>Tsai</code>, and a lower-level C module
+called <code>pytsai</code>. Before you can use the Blender script, you
+must therefore install the extension module. This is done using the
+normal <code>distutils</code>. Under Linux (sorry Windoze users, I
+must admit ignorance of your requirements):<br>
+<br>
+<div style="margin-left: 40px;"><code>$ python setup.py build<br>
+$ su<br>
+# python setup.py install</code></div>
+<br>
+Then you can fire up Blender:<br>
+<ol>
+  <li>Set up a scene with some Empties placed at the location of
+calibration points. The Empties do not need to be specially named or
+anything, and can be arbitrarily connected to other geometry in the
+scene (parented, etc.). The Empties can optionally be added later while
+the script is running, but I tend to set them up in advance and save
+the file in case the script segfaults on me or something (grin).<br>
+  </li>
+  <li>Load and run the script (use the menus of the Text window if you
+can't remember the shortcuts - I can't).</li>
+  <li>Click on the <span style="text-decoration: underline;">Load Image</span>
+button to load an image to use for the calibration. (IMPORTANT: The
+image <span style="font-weight: bold;">must</span> be in RAW TGA
+format for now.) The image can be moved in the script window by
+dragging with the middle mouse button. You can change the zoom using
+either the mouse wheel or (perhaps if you don't have a mouse wheel) the
+    <span style="text-decoration: underline;">Zoom</span> numeric
+button. Pressing ZKEY will reset the zoom to 1.0.<br>
+  </li>
+  <li>Select Empties in the 3D scene (in the 3D view) and add
+calibration points to the image. If everything is working correctly,
+when you select an Empty in the 3D view, the script window will change
+automatically to give you the option of adding a corresponding point to
+the image. Points can be added by clicking the <span
+ style="text-decoration: underline;">Add</span> button or by pressing
+the SPACEBAR. This will bring up a pair of red cross-hairs that show
+the prospective location of the image point. Note that the offset of
+the cross-hairs from the mouse pointer is deliberate; it is designed to
+assist in seeing the actual intersection of the two lines (yes, I know
+it can be off-putting, but you get used to it). When working with image
+points after they have been added, GKEY, AKEY and XKEY work as
+expected. The only minor point is that GKEY drag mode cannot be
+cancelled by pressing ESCKEY - you must actually move the point(s)
+somewhere and finalize the drag once you have started it.&nbsp; If you
+require fine-tuning of position that is cumbersome with the mouse, you
+can use the arrow keys to move around one screen pixel at a time.
+Points can be selected using the right mouse button, and multiple
+selections can be achieved by holding down either SHIFT key. Points can
+be deleted using the <span style="text-decoration: underline;">Delete</span>
+button (which <span style="font-weight: bold;">does not</span> prompt
+for confirmation) or by pressing the XKEY (which <span
+ style="font-weight: bold;">does</span> prompt for comfirmation).<br>
+  </li>
+  <li>Once correspondence has been achieved between scene Empties and
+the image points, calibrate the camera. When you select or create a new
+camera, the script should change to offer calibration options. Set the
+options as you require (see the Notes below for some hints) and click
+the <span style="text-decoration: underline;">Calibrate</span> button.</li>
+</ol>
+<h2>Notes</h2>
+The following are some general notes about using the script. This
+documentation is far from complete, but should hopefully give you
+enough to be going on with:<br>
+<ul>
+  <li>Two types of calibration targets are possible. You must use the
+correct calibration script option for each target type, otherwise the
+calibration will definitely fail (or be wildly inaccurate):<br>
+  </li>
+  <ul>
+    <li>Coplanar - all calibration points lie in the same plane (they <span
+ style="font-weight: bold;">must</span> have z = 0 in their 3D space
+coordinates, and <span style="font-weight: bold;">must not</span>
+approximate a line).</li>
+    <li>Noncoplanar - calibration points occupy 3D space (they <span
+ style="font-weight: bold;">must not</span> approximate a line or
+plane).</li>
+  </ul>
+  <li>Two calibration routines exist:</li>
+  <ul>
+    <li>Partial optimization - non-linear optimization is performed
+only for the <code>Tz</code>, <code>f</code>, and <code>kappa1</code>
+parameters (which are the z-camera coordinate, focal length and radial
+distortion constant respectively).</li>
+    <li>Full optimization - non-linear optimization is performed for
+all parameters. This method currently seems to have some kind of bug,
+which I'm looking into (I may have introduced a bug myself during my
+wild hacking of Willson's code).<br>
+    </li>
+  </ul>
+  <li>Calibration will fail if the world space origin is near to the
+vertical line that passes through the centre of the image. For now,
+just avoid this condition (don't have the scene origin anywhere near
+the vertical centre of the image).&nbsp; You can manually offset the
+scene if you need to. In the future, an option will be provided to
+mathematically shift the origin of the entire scene during calibration
+and then move it back again afterwards if necessary.</li>
+  <li>For coplanar calibration, avoid looking directly along the z-axis
+(ie: straight down at the target). If you do so, it is not possible to
+distinguish depth effects from focal length effects. Your calibration
+may fail or be wildly inaccurate. Willson recommends a minimum angle of
+30 degrees from the z-axis, although that is arbitrary.</li>
+  <li>To increase the accuracy of calibration, for both target types,
+consider the following:</li>
+  <ul>
+    <li>"Perspective effects" increase the accuracy. These can be
+achieved by having calibration points located over a wide range of
+depths in the scene. This will particularly help to pin down the camera
+z-coordinate and its focal length.</li>
+    <li>More points will increase the calibration accuracy. Be creative
+about including more points in your calibration set (provided they are
+accurate). If, for example, you have a pole with a calibration point at
+the top, place a few calibration points down along its length. For
+coplanar checkerboard targets, use a denser grid of checkers. If you
+are indoors and have a regular grid pattern of ceiling tiles, maybe
+include their corners in your set. Always beware, though, that
+architecture is sometimes notoriously non-square! If in doubt, measure
+things using reliable techniques first.</li>
+  </ul>
+  <li>The Python extension module contains many externally-visible
+symbols (many non-static functions, and three main global variables),
+instead of just the module init function. The chances of a naming
+conflict occurring between these symbols and symbols in either the
+Python interpreter or Blender itself seems to be quite remote (I
+changed the names of the three global variables to something more
+"specific" just in case), but it is worth me noting this problem
+anyway. The Python documentation is very strict about this issue: these
+symbols should <span style="font-weight: bold;">not</span> be visible.
+The only problem is that enforcing that condition would require some
+major re-working of the library. Maybe there is a shortcut that I've
+missed? C++ namespaces maybe? Please let me know if you are aware of an
+easy solution.</li>
+</ul>
+<br>
+Jonathan Merritt (<a href="mailto:j.merritt@pgrad.unimelb.edu.au">j.merritt@pgrad.unimelb.edu.au</a>),
+<br>
+PhD Student (Equine Biomechanics),<br>
+<a href="http://www.equinecentre.com.au">The University of Melbourne
+Equine Centre</a>,<br>
+240 Princes Highway,<br>
+Werribee, Vic. 3030.<br>
+<br>
+Last updated: 04-Nov-2004 (20041104).<br>
+</body>
+</html>

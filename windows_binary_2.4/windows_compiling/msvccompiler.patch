@@ -1,0 +1,48 @@
+*** msvccompiler-final-original.py	Mon Nov 29 08:58:32 2004
+--- msvccompiler.py	Fri Dec  3 15:31:54 2004
+***************
+*** 126,132 ****
+          self.set_macro("FrameworkDir", net, "installroot")
+          try:
+              if version > 7.0:
+!                 self.set_macro("FrameworkSDKDir", net, "sdkinstallrootv1.1")
+              else:
+                  self.set_macro("FrameworkSDKDir", net, "sdkinstallroot")
+          except KeyError, exc: #
+--- 126,138 ----
+          self.set_macro("FrameworkDir", net, "installroot")
+          try:
+              if version > 7.0:
+!                 try:
+!                     self.set_macro("FrameworkSDKDir", net, "sdkinstallrootv1.1")
+!                 except KeyError:
+!                     # likely using free Command-line compiler with free SDK
+!                     freeSDK = r"SOFTWARE\Microsoft\MicrosoftSDK\InstalledSDKs\63DADB24-DC99-45EB-A748-EC93AB8A7497"
+!                     # following should raise key error if not available...
+!                     self.set_macro( "FrameworkSDKDir", freeSDK, 'install dir' )
+              else:
+                  self.set_macro("FrameworkSDKDir", net, "sdkinstallroot")
+          except KeyError, exc: #
+***************
+*** 571,576 ****
+--- 577,595 ----
+                          "You must at least run the Visual Studio GUI once "
+                          "so that these entries are created.")
+                  break
++         if self.__version >= 7:
++             # well, what if we've already set the environment variables?
++             map = {
++                 'library dirs': 'lib',
++                 'path dirs': 'path',
++                 'include dirs': 'include',
++             }
++             path = map.get( path )
++             if os.environ.get( path ) is not None:
++                 return string.split(
++                     os.environ.get( path ),
++                     os.pathsep,
++                 )
+          return []
+  
+      def set_path_env_var(self, name):
+

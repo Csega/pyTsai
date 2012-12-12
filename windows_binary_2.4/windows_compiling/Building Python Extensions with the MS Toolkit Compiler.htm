@@ -1,0 +1,395 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-ca">
+<head>
+  <link rel="icon" type="image/png" href="/maps/favicon.png">
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+  <title>Building Python Extensions with the MS Toolkit Compiler</title>
+  <link rel="stylesheet" type="text/css" href="toolkit.css">
+  <meta name="author" content="Mike C. Fletcher">
+</head>
+<body style="direction: ltr;">
+<h1>Python 2.4 Extensions w/ the MS Toolkit Compiler<br>
+</h1>
+<p class="introduction">This document describes the process of building
+Python 2.4 binary extensions with the (free) Microsoft Visual C++
+Toolkit Compiler, which is an optimising native command-line compiler
+for Microsoft Windows.&nbsp; The page is intended for use by extension
+developers who would like to provide binary Python packages for use by
+Microsoft Windows end-users, and assumes quite some familiarity with
+development tools.&nbsp; It also tends to assume that you are using
+distutils for extension setup.&nbsp; It is not really targeted at
+end-users.<br>
+</p>
+<p class="technical">Note that this document represents the findings of
+a very limited set of tests with what is essentially an unsupported
+approach to building extensions.&nbsp; You should expect to find
+bugs.&nbsp; No warranty is made that the approach outlined is safe or
+appropriate.</p>
+<p class="technical">Note also that the author of the document (Mike
+Fletcher) has abandoned Windows as a development platform (in some part
+because of the difficulties in getting a working compiler to support
+the platform), and is thus no longer actively maintaining this
+page.&nbsp; While some people are still reporting successes, others are
+having difficulties with building certain projects.&nbsp; The Toolkit
+approach is, in short, a bit dicey as a platform for serious
+development.<br>
+</p>
+<h2>Getting the Packages<br>
+</h2>
+<p>The Microsoft Toolkit Compiler doesn't come out-of-the-box with
+everything you need to compile extensions.&nbsp; There are 5 packages
+you will need to acquire and install in order to begin making Python
+2.4 extensions.<br>
+</p>
+<ul>
+  <li><a href="http://msdn.microsoft.com/visualc/vctoolkit2003/">Microsoft
+Visual C++ Toolkit Compiler</a> (a.k.a. MS Toolkit Compiler)<br>
+  </li>
+  <ul>
+    <li>The core compiler and linker, these are the command-line tools
+which do the actual work<br>
+    </li>
+  </ul>
+  <li><a
+ href="http://www.microsoft.com/msdownload/platformsdk/sdkupdate/">Microsoft
+Platform SDK</a> (Internet Explorer (or Mozilla + Prefbar) required to
+download)<br>
+  </li>
+  <ul>
+    <li>Provides the headers and libraries required for linking to
+Microsoft system services
+      <p class="technical">Why not just use the compiler in the
+Microsoft platform SDK?&nbsp; It turns out that this compiler is
+a <span style="font-weight: bold;">non-optimising</span> compiler, the
+same as is included in MSVC
+Standard Edition (the <span style="font-weight: bold;">Professional</span>
+Version is the one with the
+optimising compiler).<br>
+      </p>
+    </li>
+  </ul>
+  <li>.NET Runtime (Get from <a
+ href="http://windowsupdate.microsoft.com/">Windows Update</a>)</li>
+  <ul>
+    <li>Required by the .NET Framework<br>
+    </li>
+  </ul>
+  <li><a href="http://msdn.microsoft.com/netframework/">.NET Framework
+SDK</a> Version 1.1</li>
+  <ul>
+Provides the core msvcrt.lib for msvcr71.dll against which to link your
+extensions.&nbsp; This is critically important, as without it you are
+going to wind up linking against the wrong run-time and will see
+crashes whenever a core object such as a file is shared across run-time
+barriers.
+    <p class="technical">The 2.0 beta also works according to reports,
+and may be required to build Numpy 23.6 (whereas 23.1 seems to work
+without it).<br>
+    </p>
+  </ul>
+  <li><a href="http://www.python.org/2.4/">Python 2.4</a> (Python.org
+version)</li>
+  <ul>
+    <li>This version is built with Visual Studio 7.1, and so does not
+work with extensions compiled with Visual Studio 6.0.&nbsp; The Toolkit
+Compiler is apparently the same as that found in Visual Studio 7.1</li>
+  </ul>
+</ul>
+<p>You will need to install all of these packages in order to do any
+compilation.</p>
+<h2>Configuration</h2>
+<p>Now we need to set up a build environment which points to all the
+various executables, headers and library files we will be using.&nbsp;
+The Toolkit compiler does not AFAIK use the registry for storing any
+directory information (though it does store basic installation
+keys).&nbsp; Since the normal mechanism for setting up the Toolkit is
+to run the vcvars.bat file, we'll copy that file and make changes to it
+which set up the various extra paths we need.&nbsp; Here's a sample
+batch file, <code>vc7.bat</code>:<br>
+</p>
+<pre>rem vc7.bat, copied to the command path for the machine<br>@echo off<br><br>Set PATH=C:\Program Files\Microsoft Visual C++ Toolkit 2003\bin;C:\Program Files\Microsoft SDK\Bin;c:\bin\lang\py24;%PATH%<br>Set INCLUDE=C:\Program Files\Microsoft Visual C++ Toolkit 2003\include;C:\Program Files\Microsoft SDK\include;c:\bin\lang\py24\include;%INCLUDE%<br>Set LIB=C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\lib;C:\Program Files\Microsoft Visual C++ Toolkit 2003\lib;C:\Program Files\Microsoft SDK\Lib;c:\bin\lang\py24\libs;%LIB%<br><br>echo Visit http://msdn.microsoft.com/visualc/using/documentation/default.aspx for<br>echo complete compiler documentation.<br></pre>
+<p>The path variable needs to point to <code>%Toolkit%/bin</code>, <code>%PlatformSDK%/bin</code>,
+and the Python 2.4 installation directory (that last is optional, but
+makes things easier if you're working on a machine which normally has a
+different Python on the path).<br>
+</p>
+<p>The include path needs to point to <code>%Toolkit%/include</code>, <code>%PlatformSDK%/include</code>,
+and <code>%Python24%/include</code>.<br>
+</p>
+<p>For the lib path, the <code>"Microsoft Visual Studio .NET 2003"</code>
+directory referenced above is created as a side-effect of one of our
+installs and includes the all-important <code>msvcr71.lib</code> file,
+we also need to add the <code>%Toolkit%/lib</code>, <code>%PlatformSDK%/lib</code>
+and <code>%Python24%/libs</code> directories to the path.<br>
+</p>
+<p>There may still be required utilities/libs/header directories that
+this configuration doesn't include.&nbsp; If you find one, please <a
+ href="mailto:mcfletch@vrplumber.com">let me know</a> so I can add them
+to this page.<br>
+</p>
+<p>Now, when we want to use the Toolkit compiler, we run <code>vc7</code>
+at the command prompt and our build environment is configured.&nbsp;
+Now we need to teach Python's distutils how to work with this compiler.<br>
+</p>
+<h2>Distutils Modifications</h2>
+<p>Distutils doesn't know how to deal with the MS Toolkit Compiler, so
+we need to modify it.&nbsp; At the moment we're doing this by actually
+modifying the %Python24%/lib/distutils/msvccompiler.py file.&nbsp;
+Eventually the changes could be wrapped into distutils, either as a
+sub-class of msvccompiler, or by altering the base file.<br>
+</p>
+<p>The differences are quite minor, however, different versions are
+required for the 2.4 <a href="msvccompiler-alpha.patch">alpha
+msvccompiler</a> and 2.4 final.&nbsp; Here are the 2.4 final <a
+ href="msvccompiler.patch">diffs</a>:<br>
+</p>
+<pre>*** msvccompiler-final-original.py	Mon Nov 29 08:58:32 2004<br>--- msvccompiler.py	Fri Dec  3 15:31:54 2004<br>***************<br>*** 126,132 ****<br>          self.set_macro("FrameworkDir", net, "installroot")<br>          try:<br>              if version &gt; 7.0:<br>!                 self.set_macro("FrameworkSDKDir", net, "sdkinstallrootv1.1")<br>              else:<br>                  self.set_macro("FrameworkSDKDir", net, "sdkinstallroot")<br>          except KeyError, exc: #<br>--- 126,138 ----<br>          self.set_macro("FrameworkDir", net, "installroot")<br>          try:<br>              if version &gt; 7.0:<br>!                 try:<br>!                     self.set_macro("FrameworkSDKDir", net, "sdkinstallrootv1.1")<br>!                 except KeyError:<br>!                     # likely using free Command-line compiler with free SDK<br>!                     freeSDK = r"SOFTWARE\Microsoft\MicrosoftSDK\InstalledSDKs\63DADB24-DC99-45EB-A748-EC93AB8A7497"<br>!                     # following should raise key error if not available...<br>!                     self.set_macro( "FrameworkSDKDir", freeSDK, 'install dir' )<br>              else:<br>                  self.set_macro("FrameworkSDKDir", net, "sdkinstallroot")<br>          except KeyError, exc: #<br>***************<br>*** 571,576 ****<br>--- 577,595 ----<br>                          "You must at least run the Visual Studio GUI once "<br>                          "so that these entries are created.")<br>                  break<br>+         if self.__version &gt;= 7:<br>+             # well, what if we've already set the environment variables?<br>+             map = {<br>+                 'library dirs': 'lib',<br>+                 'path dirs': 'path',<br>+                 'include dirs': 'include',<br>+             }<br>+             path = map.get( path )<br>+             if os.environ.get( path ) is not None:<br>+                 return string.split(<br>+                     os.environ.get( path ),<br>+                     os.pathsep,<br>+                 )<br>          return []<br>  <br>      def set_path_env_var(self, name):<br></pre>
+<p>The first change relies on the GUID of the 1.1 .NET Framework
+SDK.&nbsp; Obviously that's not going to work if you install a
+different version of the SDK.&nbsp; If someone has a better approach,
+let me know.&nbsp; <br>
+</p>
+<p class="technical">Martin Bless reports that for his XP SP2 SDK the
+GUID is: B44C7E10-89BD-4A32-A3BF-D9D0BC4C9A05 rather than that in the
+patch.<br>
+</p>
+<p>The second change should be fairly robust, in fact,
+it should even allow for using Visual Studio 6 from the command line if
+you haven't yet run the IDE (a limitation of the current code) but have
+run vcvars.bat. <br>
+</p>
+<p>
+</p>
+<p>You can either manually edit the file or use the unix-style patch
+utility to integrate the patch (the patches above were made against the
+msvccompiler.py file in Python-2.4a1 and Python-2.4 (final)).<br>
+</p>
+<p class="technical">Armin Rigo reports that he needs to use 'library'
+instead of "library dirs" in the second half of the patch.&nbsp; My own
+system doesn't seem to require this, so I've left the patch as-is for
+now.&nbsp; My reading of the code is that path will always have ' dirs'
+appended to it.<br>
+</p>
+<p class="technical">From another report: it's possible to
+replace the distutils.msvccompiler.read_values with a simple function
+that simply returns the values from the shell environment, (with only
+the toolkit installed you will always get the values from the
+environment), but I don't recommend that approach, as at some point you
+may install MSVC and find everything messed up.<br>
+</p>
+<h2>Compiling your Extension</h2>
+<p>At this point, you should be able to run <code>vc7.bat</code> from
+the command prompt, then run <code>python setup.py bdist_wininst</code>
+and have the MS Toolkit Compiler be used to build your extension for
+Python 2.4 and turn it into a binary redistributable for MS Windows
+end-users.<br>
+</p>
+<p>If you succeed, fail, have suggestions for enhancements, or need
+clarification,
+<a href="mailto:mcfletch@vrplumber.com">let me know</a>
+and I'll try to integrate the feedback into this document.&nbsp; You
+will notice that there are a large number of warnings printed about
+soon-to-be obsolete compiler flags.&nbsp; At some point someone will
+need to track those down and see if we can eliminate them from
+distutils.<br>
+</p>
+<h2>Success/Failure Matrix<br>
+</h2>
+<p>This table is to collect the set of successes/failures encountered
+in attempting to build various extensions with the setup outlined here:<br>
+</p>
+<table style="width: 100%; text-align: left;" border="0" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <th style="vertical-align: top;">Package<br>
+      </th>
+      <th style="vertical-align: top;">Success?<br>
+      </th>
+      <th style="vertical-align: top;">Notes<br>
+      </th>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">Numpy 23.1</th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">There
+are some ominous warnings from the lapack_lite module about undefined
+functions, but the core library seems to work fine with PyOpenGL and
+OpenGLContext.<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">Numpy 23.6</th>
+      <td style="vertical-align: top;">Yes (w/ changes) </td>
+      <td style="vertical-align: top;">Ming-Yu reports success when
+compiling
+with the .Net SDK 2.0 beta1, while I can't seem to get compilation to
+work with the setup described above.&nbsp; Looks, again, like the
+lapack_lite module is missing something, but in this case, the entire
+lapack.lib module.<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">mxTextTools-nr 2.1<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Only non-recursive rewrite tested<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">mxExperimental
+0.9.0<br>
+      </th>
+      <td style="vertical-align: top;">No<br>
+      </td>
+      <td style="vertical-align: top;">Requires lib.exe, which isn't
+part of the above setup.&nbsp; See <a
+ href="http://sapdb.2scale.net/moin.cgi/MS_20C_2b_2b_20Toolkit">the
+SAPDB wiki</a>
+for description of workarounds that may eventually allow compilation to
+work.&nbsp; Probably want to eliminate use of lib.exe eventually, as it
+seems distutils could do the (trivial) work itself. (Report from Steve
+Holden)<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">mxBase, mxODBC
+(2.0.6, 2.0.7 resp.)<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Report from Steve Holden<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">OpenGLContext 2.0.0b2
+Accellerators<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">PyOpenGL 2.0.2.01 (Swig 1.3.23
+version), and 2.0.1.09 (Swig 1.3.13)<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">2.0.2 tested with Python 2.4
+final.&nbsp; 2.0.1 tested with Python 2.4 alpha and beta.<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">Psyco 1.3<br>
+      </th>
+      <td style="vertical-align: top;">Yes (w/ changes)<br>
+      </td>
+      <td style="vertical-align: top;">Armin reports success building
+Pysco
+with the above setup, modulo the noted changes to the distutils patch
+to remove " libs" from the directory name mapping (eliminating the need
+for the mapping in the process if I'm not mistaken).<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">PyTables<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Needs HDF5 dependency recompiled
+as well, apparently. (Report from Francesc Altet).<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">PyGreSQL
+3.6-pre040918 (with patches)<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Against PostgreSQL 7.4.6
+libpq.dll (created w/ toolkit) </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">PyPgSQL 2.4<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Against PostgreSQL 7.4.6
+libpq.dll (created w/ toolkit)</td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">PyCrypto 2.0<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Report from Jody Burns<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">MySQL-python
+1.0.0<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Compiled with MySQL
+4.0.20d-win.&nbsp; Required copying c:\mysql\lib\opt\zlib.lib to
+c:\mysql\lib\opt\z.lib . Report from Y.H. Rhiu.&nbsp; Steve Holden also
+reports success.<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">Sendkeys
+(unspecified version)<br>
+      </th>
+      <td style="vertical-align: top;">Yes<br>
+      </td>
+      <td style="vertical-align: top;">Report from Dan Milgram.<br>
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; vertical-align: top;">InformixDB
+2.0, 2.1</th>
+      <td style="vertical-align: top;">Yes</td>
+      <td style="vertical-align: top;">Report from Carsten Haese</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Other Resources</h2>
+<ul>
+  <li><a href="http://sapdb.2scale.net/moin.cgi/MS_20C_2b_2b_20Toolkit">SAPDB
+Wiki Page</a></li>
+  <ul>
+    <li>Fairly detailed look at the various elements and features
+needed, not much focus on how to set up the environment, and lots of
+notes for missing things that don't seem to relate to Python extension
+writing/porting</li>
+  </ul>
+  <li><a
+ href="http://mail.python.org/pipermail/python-dev/2004-February/042595.html">Building
+Python with the MSToolkit Compiler</a></li>
+  <ul>
+    <li>Post to Python-dev regarding how to build Python itself (as
+distinct from extension modules) using the Toolkit compiler<br>
+    </li>
+  </ul>
+  <li><a href="http://wiki.tcl.tk/11431">TCL Wiki Page</a></li>
+  <ul>
+    <li>Minimal instructions on how to build TCL with the MS Toolkit
+Compiler</li>
+  </ul>
+  <li><a href="http://www.mingw.org/">MingW</a> and <a
+ href="http://www.cygwin.com/">Cygwin</a><br>
+  </li>
+  <ul>
+    <li>Free (libre) software for use in compiling extensions for Win32</li>
+  </ul>
+</ul>
+<p class="footer">Copyright 2004 Mike Fletcher -- All trademarks
+property of their respective owners<br>
+</p>
+</body>
+</html>

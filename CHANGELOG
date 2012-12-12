@@ -1,0 +1,6 @@
+2012.12.12. Gabor Cseh
+
+0.1c -> 0.1d:
+The python source and the pytsai.c was modified to satisfy the python 3.3 needs.
+With the source a new ../dist/PyTsai-1.0.win-amd64.zip file is provided. This is for the python 3.3 version! The same zip file can be found in the pytsai root directory named PyTsai-1.0.win-amd64-python3.3.zip. To install it into python 3.3, you only need to change directory to the directory containts the folder python33 and extract it. After that you can import the Tsai calibration method from the pytyhon command line or from another module using the "import Tsai" (with capital T) command. To install it for Blender 2.65 (for this version it worked, maybe working for other versions too), just copy the content of the folder (just the files, not the whole directory tree)
+The binaries for installing it manually for python 3.3 can be found in the ../build directory. You don't need a compiler (in principle), just type "python setup.py install" from the pytsai root folder.

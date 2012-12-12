@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Camera Calibration Tutorial</title>
+</head>
+<body>
+<h1 style="text-align: center;">Camera Calibration Tutorial</h1>
+<br>
+This tutorial takes you through the task of calibrating a camera using
+a collinear calibration target.&nbsp; Please read the <a
+ href="index.html">Main Documentation</a> if you haven't yet done so.
+The image that is used for calibration is generated as a Blender
+rendering (it is synthetic), and therefore allows for direct comparison
+of the results of the calibration.<br>
+<h2>1. Load the Tutorial</h2>
+<ol>
+  <li>Start Blender.</li>
+  <li>Load the file <code>tutorial.blend</code>.</li>
+</ol>
+<h2>2. Examine the Scene</h2>
+<ol>
+  <li>Layer 1 contains the geometry of the rendered scene.</li>
+  <li>Layer 2 contains Empties that comprise the calibration target,
+and a camera to calibrate.</li>
+  <li>Layer 3 contains the original camera and light source used to
+render the synthetic image.</li>
+</ol>
+<h2>3. Use the BlenderTsai.py Script</h2>
+<ol>
+  <li>Use Alt-P in the text window to start the script. Note that while
+you're using the script, you will need to be able to view the 3D view
+in addition to the script window. The 3D window is used to select
+empties to use as calibration points.<br>
+  </li>
+  <li>Click the <span style="text-decoration: underline;">Load Image</span>
+button and load the <code>doc/calimg.tga</code> image. This image is
+stored as a RAW TGA file because the script can only load RAW TGA files:</li>
+</ol>
+<div style="margin-left: 40px;"><img alt="Loaded Image"
+ title="Loaded Image" src="image-loaded.jpg"
+ style="width: 516px; height: 383px;"><br>
+</div>
+<ol start="3">
+  <li>Select the Empty with the largest y-coordinate and x=0.&nbsp;
+This empty corresponds to the top left corner of the checkerboard
+pattern. Move the mouse over to the script window and press SPACEBAR to
+add an image point.&nbsp; You can zoom using the mouse scroll wheel or
+the zoom numeric button, and the image can be moved around by dragging
+with the middle mouse button. The cross-hairs show the point's
+prospective location. Click with the left mouse button to place the
+point:<br>
+  </li>
+</ol>
+<div style="margin-left: 40px;"><img alt="Placing a Point"
+ title="Placing a Point" src="placing-point.jpg"
+ style="width: 615px; height: 404px;"><br>
+</div>
+<ol start="4">
+  <li>If you need to move a point that has been placed already, you can
+invoke grab mode on it by pressing GKEY. You can select points using
+the right mouse button, and multiple selections can be achieved by
+holding down either SHIFT key. When working with the image points,
+GKEY, AKEY and XKEY work as expected. The only thing to note is that if
+you start a drag with GKEY, you must complete it; you cannot cancel by
+pressing ESCKEY. Points can additionally be deleted from the image by
+pressing the <span style="text-decoration: underline;">Delete</span>
+button. Note that while the XKEY prompts before deleting points, the <span
+ style="text-decoration: underline;">Delete</span> button does not
+prompt.</li>
+  <li>Continue placing points on the image until each calibration Empty
+has a corresponding image point.</li>
+  <li>Select the camera to calibrate and click the <span
+ style="text-decoration: underline;">Calibrate</span> button in the
+script window (the default options are what you need - see below):</li>
+</ol>
+<div style="margin-left: 40px;"><img alt="Calibrate the Camera"
+ title="Calibrate the Camera" src="calibrate-camera.jpg"
+ style="width: 526px; height: 366px;"><br>
+</div>
+<ol start="7">
+  <li>If everything has gone to planned, then the camera you have just
+calibrated will match (closely) the camera originally used to render
+the image. Check both the positions, orientations and the lens values
+of the two cameras.</li>
+</ol>
+<br>
+Jonathan Merritt (<a href="mailto:j.merritt@pgrad.unimelb.edu.au">j.merritt@pgrad.unimelb.edu.au</a>),
+<br>
+PhD Student (Equine Biomechanics),<br>
+<a href="http://www.equinecentre.com.au/">The University of Melbourne
+Equine Centre</a>,<br>
+240 Princes Highway,<br>
+Werribee, Vic. 3030.<br>
+<br>
+Last updated: 04-Nov-2004 (20041104).<br>
+</body>
+</html>

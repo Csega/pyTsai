@@ -1,0 +1,559 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>Building Python extensions for Windows with only free tools | boodebr.org</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" href="/main/themes/fpm_garland/boodebr_favicon.png" type="image/x-icon" />
+    <style type="text/css" media="all">@import "/main/modules/wikkly_fmt/css/wikklytext.css";</style>
+<style type="text/css" media="all">@import "/main/modules/book/book.css";</style>
+<style type="text/css" media="all">@import "/main/modules/node/node.css";</style>
+<style type="text/css" media="all">@import "/main/modules/system/defaults.css";</style>
+<style type="text/css" media="all">@import "/main/modules/system/system.css";</style>
+<style type="text/css" media="all">@import "/main/modules/user/user.css";</style>
+<style type="text/css" media="all">@import "/main/modules/comment/comment.css";</style>
+<style type="text/css" media="all">@import "/main/themes/fpm_garland/style.css";</style>
+<style type="text/css" media="all">@import "/main/files/color/fpm_garland-4848b2fd/style.css";</style>
+    <script type="text/javascript" src="/main/misc/jquery.js"></script>
+<script type="text/javascript" src="/main/misc/drupal.js"></script>
+<script type="text/javascript" src="/main/misc/textarea.js"></script>
+<script type="text/javascript" src="/main/misc/collapse.js"></script>
+    <style type="text/css" media="print">@import "/main/themes/fpm_garland/print.css";</style>
+	  <!-- Fix for transparent PNGs in IE5.5/6, from http://homepage.ntlworld.com/bobosola/ -->
+      <!--[if lt IE 7]>
+         <script defer type="text/javascript" src="http://boodebr.org/javascript/pngfix.js"></script>
+      <![endif]-->
+    <!--[if lt IE 7]>
+    <style type="text/css" media="all">@import "/main/themes/fpm_garland/fix-ie.css";</style>
+    <![endif]-->
+  </head>
+  <body class="sidebar-right">
+
+<!-- Layout -->
+  <div id="header-region" class="clear-block"></div>
+
+    <div id="wrapper">
+    <div id="container" class="clear-block">
+
+      <div id="header">
+        <div id="logo-floater">
+        <h1><a href="/main/" title=""><img src="/main/themes/fpm_garland/boodebr_banner.png" alt="" id="logo" /><span></span></a></h1>        </div>
+
+                  <ul class="links primary-links"><li class="first menu-1-1-2"><a href="/main/downloads" title="Software downloads" class="menu-1-1-2">Downloads</a></li>
+<li class="last menu-1-2-2"><a href="/main/python" class="menu-1-2-2">Python</a></li>
+</ul>                
+      </div> <!-- /header -->
+
+      
+      <div id="center"><div id="squeeze"><div class="right-corner"><div class="left-corner">
+          <div class="breadcrumb"><a href="/main/">Home</a></div>          
+                    <h2>Building Python extensions for Windows with only free tools</h2>          
+          
+                              
+<div id="node-78" class="node">
+
+
+
+      <span class="submitted">April 19, 2007 - 11:26pm — frank</span>
+  
+  <div class="content">
+     Prior to Python 2.5, trying to create Python extension modules for Windows with only free tools was an extremely frustrating experience. Python has traditionally been (and still is) compiled with proprietary Microsoft tools, making it difficult to interoperate with <span class="wikkly-tt">gcc</span>. Your options were:  <ol class="wikkly-ol"><li class="wikkly-ol-li1">Trying to get MinGW to work by using <a title="Link to http://sebsauvage.net" class="wikkly-a-www" href="http://sebsauvage.net/python/mingw.html" target="_blank">this very painful method</a>. </li><li class="wikkly-ol-li1">For a while, Microsoft offered a free set of basic compiler tools that could be used to create extensions (it was still <a title="Link to http://www.vrplumber.com" class="wikkly-a-www" href="http://www.vrplumber.com/programming/mstoolkit/" target="_blank">fairly difficult</a>, but possible). Unfortunately,  Microsoft withdrew the free tools fairly soon after Python 2.4 came out. </li><li class="wikkly-ol-li1">Recompile Python with MinGW. In theory this could work (I never made it ...) but then you are locked into your own MinGW-only world, and cannot interoperate with the standard Python distribution.   <br/><br/></li></ol>With Python 2.5, free (as in open source!) tools are finally supported without having to perform any weird voodoo on the standard distribution. You have two basic options: <ul class="wikkly-ul"><li class="wikkly-ul-li1"><a title="Link to http://www.mingw.org" class="wikkly-a-www" href="http://www.mingw.org/" target="_blank">MinGW</a> </li><li class="wikkly-ul-li1"><a title="Link to http://www.cygwin.com" class="wikkly-a-www" href="http://www.cygwin.com" target="_blank">Cygwin</a> with its mingw package.<br/><br/></li></ul>Each method has its pros and cons: <ul class="wikkly-ul"><li class="wikkly-ul-li1">With MinGW, you work with standard DOS/Windows tools (i.e. a "DOS box"). With Cygwin you work inside a POSIX/Linux-like environment. This is a matter of personal taste. </li><li class="wikkly-ul-li1">There are a lot of libraries that assume you're either on a Windows box with Visual C++ or  in a full POSIX environment with <span class="wikkly-tt">gcc</span>. Very few (I've found) support MinGW natively. Cygwin lets you compile libraries that require the full <span class="wikkly-code-inline">./configure;&nbsp;make;&nbsp;make&nbsp;install</span> process. MinGW provides a minimal POSIX environment if you install their <b class="">MSYS</b> package. </li><li class="wikkly-ul-li1">Cygwin is painless to keep up-to-date - simply run its <span class="wikkly-tt">setup.exe</span> and it will automatically find updates. MinGW is harder to keep up to date and figure out which packages you need (stable vs. candidate vs. snapshot). </li><li class="wikkly-ul-li1">MinGW produces only Windowns-native binaries (which in the current discussion is a <b class="">good thing</b>). You can do the same with Cygwin, but you have to double-check to make sure a package didn't get linked with any Cygwin DLL (which would make it non-distributable).<br/><br/></li></ul>My recommendation: <ul class="wikkly-ul"><li class="wikkly-ul-li1">If you plan to only compile Python modules and not compile any other C/C++ libraries or programs, go with MinGW. (Or, if you are more comfortable in a DOS/Windows environment, then choose MinGW.) </li><li class="wikkly-ul-li1">Use Cygwin if you routinely compile non-Python libraries that require the POSIX <span class="wikkly-code-inline">./configure;&nbsp;make;&nbsp;make&nbsp;install</span> steps, or if you feel more comfortable in a POSIX environment.<br/><br/></li></ul>I've used both, and both are excellent tools, it really comes down to personal preference and a few technical issues. Both methods are shown below.<br/><br/><i class=""> For brevity, I've used my personal folder names below, i.e. <span class="wikkly-code-inline">c:\frank</span>, etc. There is nothing special about these names; adjust them to suit your preference.</i><br/><br/><h3 class="wikkly-h3">The Cygwin way</h3><br/><ul class="wikkly-ul"><li class="wikkly-ul-li1">If you don't already have Cygwin installed, go to <a title="Link to http://www.cygwin.com" class="wikkly-a-www" href="http://www.cygwin.com" target="_blank">their site</a> to get started, or see my notes on <a title="/main/cygwin/base-installation" class="wikkly-a-www" href="/main/cygwin/base-installation" target="_blank">installing Cygwin</a> </li><li class="wikkly-ul-li1">Install <a title="Link to http://www.python.org" class="wikkly-a-www" href="http://www.python.org/download" target="_blank">Python 2.5</a> to <span class="wikkly-code-inline">c:\frank\py25</span> </li><li class="wikkly-ul-li1">Run cygwin-setup and add the following packages: <ul class="wikkly-ul"><li class="wikkly-ul-li2">gcc-mingw </li><li class="wikkly-ul-li2">gcc-mingw-core </li><li class="wikkly-ul-li2">gcc-mingw-g++  </li><li class="wikkly-ul-li2">make <br/><i class="">This will pull in several other packages.</i> </li></ul></li><li class="wikkly-ul-li1">Continue with <a title="#CFG_DISTUTILS" class="wikkly-a-internal" href="#CFG_DISTUTILS" >configuring distutils</a><br/><br/></li></ul><h3 class="wikkly-h3">The MinGW way</h3><br/><ul class="wikkly-ul"><li class="wikkly-ul-li1">Go to the <a title="Link to http://www.mingw.org" class="wikkly-a-www" href="http://www.mingw.org/" target="_blank">MinGW</a> site and download the following packages (I recommend getting the "Candidate" instead of the "Stable" versions): <ul class="wikkly-ul"><li class="wikkly-ul-li2">gcc-core </li><li class="wikkly-ul-li2">gcc-g++ </li><li class="wikkly-ul-li2">binutils </li><li class="wikkly-ul-li2">runtime </li><li class="wikkly-ul-li2">utils </li><li class="wikkly-ul-li2">w32api </li></ul></li><li class="wikkly-ul-li1">Unpack all of them to a folder, e.g. <span class="wikkly-code-inline">c:\frank\mingw</span>. </li><li class="wikkly-ul-li1">Add <span class="wikkly-code-inline">c:\frank\mingw\bin</span> to your PATH (<i class="">My Computer ➛ Properties ➛ Advanced ➛ Environment Variables</i>).<br/><br/></li></ul><h3 class="wikkly-h3"><a name="CFG_DISTUTILS" class="wikkly-a-internal"> </a>Configuring distutils</h3><br/>You now have to tell Python to use the Cygwin/MinGW compiler when building extensions. To do this, create a file <span class="wikkly-code-inline">c:\frank\py25\lib\distutils\distutils.cfg</span>: <div class="wikkly-code-block">[build]<br/>compiler&nbsp;=&nbsp;mingw32</div> <br/><i class="">This same file works for both Cygwin and MinGW setups.</i><br/><br/><h3 class="wikkly-h3">Trying it out</h3><br/><ul class="wikkly-ul"><li class="wikkly-ul-li1">Download a Python package that needs a compiler, e.g. <a title="Link to http://www.amk.ca" class="wikkly-a-www" href="http://www.amk.ca/python/code/crypto" target="_blank">PyCrypto</a> </li><li class="wikkly-ul-li1">From a shell or DOS box, unpack and chdir to the unpacked directory. </li><li class="wikkly-ul-li1"><span class="wikkly-code-inline">python&nbsp;setup.py&nbsp;bdist_wininst</span><br/>This will create an installer: <div class="wikkly-code-block">dist/pycrypto-2.0.1.win32-py2.5.exe</div><br/><i class="">You can also just do <span class="wikkly-code-inline">python&nbsp;setup.py&nbsp;install</span> here, but I have multiple win32 machines, and instead of setting up the development environment on each one, I prefer to make one <span class="wikkly-tt">.exe</span> and copy it to the other machines.</i><br/><br/></li></ul>For MinGW (assuming it worked), you are done!<br/><br/><h4 class="wikkly-h4">Cygwin Sanity Check</h4><br/>The point of setting up Cygwin as shown above is to be able to create Python extensions that <i class="">do not</i> rely on the Cygwin runtime (so they can be freely redistributed). You can check this by using <span class="wikkly-tt">objdump</span> on the <span class="wikkly-tt">.pyd</span> files that were created, e.g.: <div class="wikkly-code-block">objdump&nbsp;-p&nbsp;build/lib.win32-2.5/Crypto/Cipher/AES.pyd|grep&nbsp;DLL</div><br/> This should show: <div class="wikkly-code-block">&nbsp;&nbsp;&nbsp;&nbsp;DLL<br/>&nbsp;vma:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hint&nbsp;&nbsp;&nbsp;&nbsp;Time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Forward&nbsp;&nbsp;DLL&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;First<br/>&nbsp;&nbsp;&nbsp;&nbsp;DLL&nbsp;Name:&nbsp;msvcr71.dll<br/>&nbsp;&nbsp;&nbsp;&nbsp;DLL&nbsp;Name:&nbsp;python25.dll</div><br/>If you ever see a name beginning with <span class="wikkly-tt">cyg</span>, for example <span class="wikkly-tt">cygwin1.dll</span>, <b class="">STOP!</b>. This means you've linked in part of Cygwin, and your binary package is no longer freely redistributable. (<i class="">Passing the <span class="wikkly-tt">--host=</span> and <span class="wikkly-tt">--build=</span> flags to <span class="wikkly-tt">gcc</span> should alleviate this, see notes below.</i>)<br/><br/><h3 class="wikkly-h3">Building non-Python libraries (Cygwin)</h3><br/>When building a non-Python library for win32 under Cygwin, for a package that uses the standard <span class="wikkly-code-inline">./configure;&nbsp;make;&nbsp;make&nbsp;install</span> method, I use the following recipe: <div class="wikkly-code-block">./configure&nbsp;\<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--prefix=/cygdrive/c/frank/mingw_libs&nbsp;\<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CC="gcc&nbsp;-mno-cygwin"&nbsp;\<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CXX="g++&nbsp;-mno-cygwin"&nbsp;\<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--host=i686-pc-mingw32&nbsp;\<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--build=i686-pc-cygwin</div><br/><br/>Explanation: <dl class="wikkly-dl"><dt class="wikkly-dt"><span class="wikkly-tt">--prefix=/cygdrive/c/frank/mingw_libs</span> </dt><dd class="wikkly-dd">I install all my mingw libraries using <span class="wikkly-code-inline">c:\frank\mingw_libs</span> as the root directory. This keeps them separated from the rest of the system (don't want to accidentally mix them with Cygwin libs!). I use <span class="wikkly-code-inline">/cygdrive/c/frank/mingw_libs</span> instead of <span class="wikkly-code-inline">c:/frank/mingw_libs</span> since not all scripts understand the <span class="wikkly-tt">c:/</span> notation.<br/><br/>When possible, I try to build static libraries, but if you are building (and subsequently linking to) DLLs, make sure to add e.g. <span class="wikkly-code-inline">c:\frank\mingw_libs\bin</span> to your (Windows) PATH. </dd><dt class="wikkly-dt"><span class="wikkly-tt">CC=</span> and <span class="wikkly-tt">CXX=</span> </dt><dd class="wikkly-dd">I always set both the C and C++ compilers so it doesn't try to default to Cygwin's <span class="wikkly-tt">gcc</span>/<span class="wikkly-tt">g++</span>. </dd><dt class="wikkly-dt"><span class="wikkly-tt">--host=</span> and <span class="wikkly-tt">--build=</span> </dt><dd class="wikkly-dd">These lines let gcc know to configure itself as a cross-compiler. This should keep it from attempting to link with any Cygwin libraries, since (as a cross-compiler) it assumes they are incompatible.<br/><br/></dd></dl><h3 class="wikkly-h3">Conclusion</h3><br/>Python 2.5 <i class="">finally</i> supports creating extensions with free tools. While the debate may continue over why a free language like Python requires a proprietary compiler, for the time being at least, you can stop worrying about it and start compiling! <div class='wikkly-generated-by'>Written in <a title='WikklyText 1.1.2 on Tue Apr  8 09:22:51 2008 [11.5k, 0.7s] ' class='wikkly-a-www' href='http://wikklytext.com'>WikklyText</a>.</div>
+  </div>
+
+  <div class="clear-block clear">
+    <div class="meta">
+          <div class="terms"><ul class="links inline"><li class="first taxonomy_term_7"><a href="/main/taxonomy/term/7" rel="tag" title="" class="taxonomy_term_7">Python</a></li>
+<li class="taxonomy_term_9"><a href="/main/taxonomy/term/9" rel="tag" title="" class="taxonomy_term_9">Software</a></li>
+<li class="last taxonomy_term_19"><a href="/main/taxonomy/term/19" rel="tag" title="" class="taxonomy_term_19">win32</a></li>
+</ul></div>
+        </div>
+
+      </div>
+
+</div><div id="comments"><h2 class="comments">Comments</h2><form action="/main/python/build-windows-extensions"  method="post" id="comment-controls">
+<div><div class="box">
+
+  <h2>Comment viewing options</h2>
+
+  <div class="content"><div class="container-inline"><input type="hidden" name="form_id" id="edit-comment-controls" value="comment_controls"  />
+<div class="form-item">
+ <select name="mode" class="form-select" id="edit-mode" ><option value="1">Flat list - collapsed</option><option value="2">Flat list - expanded</option><option value="3">Threaded list - collapsed</option><option value="4" selected="selected">Threaded list - expanded</option></select>
+</div>
+<div class="form-item">
+ <select name="order" class="form-select" id="edit-order" ><option value="1" selected="selected">Date - newest first</option><option value="2">Date - oldest first</option></select>
+</div>
+<div class="form-item">
+ <select name="comments_per_page" class="form-select" id="edit-comments-per-page" ><option value="10">10 comments per page</option><option value="30">30 comments per page</option><option value="50" selected="selected">50 comments per page</option><option value="70">70 comments per page</option><option value="90">90 comments per page</option><option value="150">150 comments per page</option><option value="200">200 comments per page</option><option value="250">250 comments per page</option><option value="300">300 comments per page</option></select>
+</div>
+<input type="submit" name="op" id="edit-submit" value="Save settings"  class="form-submit" />
+</div><div class="description">Select your preferred way to display the comments and click "Save settings" to activate your changes.</div></div>
+</div>
+
+</div></form>
+<a id="comment-4823"></a>
+<div class="comment odd">
+
+  <div class="clear-block">
+      <span class="submitted">December 13, 2007 - 4:18pm — cwu (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-4823" class="active">Error on winXP</a></h3>
+
+    <div class="content">
+      <p>Thanks for the excellent post.<br />
+I have followed your MinGW way on my winXP machine (activestate python 2.5.1). When I built pyXML, I got the errors attached below.<br />
+It looks like the the problem is at the linking with python libraries, but I have verified "-LC:\Python25\libs" is used and "C:\Python25\libs\python25.lib" exists. Did I miss something?</p>
+<p>Thanks.</p>
+<p><cite><br />
+E:\Downloads\PyXML-0.8.4&gt;python setup.py build<br />
+running build<br />
+running build_py<br />
+running build_ext<br />
+building '_xmlplus.parsers.pyexpat' extension<br />
+creating build\temp.win32-2.5<br />
+creating build\temp.win32-2.5\Release<br />
+creating build\temp.win32-2.5\Release\extensions<br />
+creating build\temp.win32-2.5\Release\extensions\expat<br />
+creating build\temp.win32-2.5\Release\extensions\expat\lib<br />
+X:\app\win32\MinGW\bin\gcc.exe -mno-cygwin -mdll -O -Wall -DXML_NS=1 -DXML_DTD=1<br />
+ -DBYTEORDER=1234 -DXML_CONTEXT_BYTES=1024 -DHAVE_MEMMOVE=1 -DXML_STATIC= -Iexte<br />
+nsions/expat/lib -IC:\Python25\include -IC:\Python25\PC -c extensions/pyexpat.c<br />
+-o build\temp.win32-2.5\Release\extensions\pyexpat.o<br />
+X:\app\win32\MinGW\bin\gcc.exe -mno-cygwin -mdll -O -Wall -DXML_NS=1 -DXML_DTD=1<br />
+ -DBYTEORDER=1234 -DXML_CONTEXT_BYTES=1024 -DHAVE_MEMMOVE=1 -DXML_STATIC= -Iexte<br />
+nsions/expat/lib -IC:\Python25\include -IC:\Python25\PC -c extensions/expat/lib/<br />
+xmlparse.c -o build\temp.win32-2.5\Release\extensions\expat\lib\xmlparse.o<br />
+X:\app\win32\MinGW\bin\gcc.exe -mno-cygwin -mdll -O -Wall -DXML_NS=1 -DXML_DTD=1<br />
+ -DBYTEORDER=1234 -DXML_CONTEXT_BYTES=1024 -DHAVE_MEMMOVE=1 -DXML_STATIC= -Iexte<br />
+nsions/expat/lib -IC:\Python25\include -IC:\Python25\PC -c extensions/expat/lib/<br />
+xmlrole.c -o build\temp.win32-2.5\Release\extensions\expat\lib\xmlrole.o<br />
+X:\app\win32\MinGW\bin\gcc.exe -mno-cygwin -mdll -O -Wall -DXML_NS=1 -DXML_DTD=1<br />
+ -DBYTEORDER=1234 -DXML_CONTEXT_BYTES=1024 -DHAVE_MEMMOVE=1 -DXML_STATIC= -Iexte<br />
+nsions/expat/lib -IC:\Python25\include -IC:\Python25\PC -c extensions/expat/lib/<br />
+xmltok.c -o build\temp.win32-2.5\Release\extensions\expat\lib\xmltok.o<br />
+writing build\temp.win32-2.5\Release\extensions\pyexpat.def<br />
+X:\app\win32\MinGW\bin\gcc.exe -mno-cygwin -shared -s build\temp.win32-2.5\Relea<br />
+se\extensions\pyexpat.o build\temp.win32-2.5\Release\extensions\expat\lib\xmlpar<br />
+se.o build\temp.win32-2.5\Release\extensions\expat\lib\xmlrole.o build\temp.win3<br />
+2-2.5\Release\extensions\expat\lib\xmltok.o build\temp.win32-2.5\Release\extensi<br />
+ons\pyexpat.def -LC:\Python25\libs -LC:\Python25\PCbuild -lpython25 -lmsvcr71 -o<br />
+ build\lib.win32-2.5\_xmlplus\parsers\pyexpat.pyd<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x1b1): undef<br />
+ined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x1b8): undef<br />
+ined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x1f6): undef<br />
+ined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x1fd): undef<br />
+ined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x22b): undef<br />
+ined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x232): more<br />
+undefined references to `_imp___Py_NoneStruct' follow<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x643): undef<br />
+ined reference to `_imp___PyThreadState_Current'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x688): undef<br />
+ined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x241a): unde<br />
+fined reference to `_imp__PyString_Type'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2421): unde<br />
+fined reference to `_imp__PyString_Type'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x244c): unde<br />
+fined reference to `_imp__PyExc_TypeError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x247b): unde<br />
+fined reference to `_imp__PyExc_ValueError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x251e): unde<br />
+fined reference to `_imp__PyFile_Type'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2525): unde<br />
+fined reference to `_imp__PyFile_Type'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x257c): unde<br />
+fined reference to `_imp__PyExc_TypeError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x25ff): unde<br />
+fined reference to `_imp__PyExc_IOError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x273b): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2743): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x27ff): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2809): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2aba): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2ac2): more<br />
+ undefined references to `_imp___Py_NoneStruct' follow<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2c3b): unde<br />
+fined reference to `_imp__PyExc_RuntimeError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2e12): unde<br />
+fined reference to `_imp___Py_TrueStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2e19): unde<br />
+fined reference to `_imp___Py_ZeroStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x2e50): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3149): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3150): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3519): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3597): unde<br />
+fined reference to `_imp__PyExc_RuntimeError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x37a8): unde<br />
+fined reference to `_imp__PyExc_AttributeError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x38eb): unde<br />
+fined reference to `_imp__PyExc_ValueError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3905): unde<br />
+fined reference to `_imp___Py_NoneStruct'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x393e): unde<br />
+fined reference to `_imp__PyDict_Type'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3945): unde<br />
+fined reference to `_imp__PyDict_Type'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3966): unde<br />
+fined reference to `_imp__PyExc_TypeError'<br />
+build\temp.win32-2.5\Release\extensions\pyexpat.o:pyexpat.c:(.text+0x3acd): unde<br />
+fined reference to `_imp__PyType_Type'<br />
+collect2: ld returned 1 exit status<br />
+error: command 'gcc' failed with exit status 1<br />
+</cite></p>
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/4823" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<div class="indented"><a id="comment-5746"></a>
+<div class="comment even">
+
+  <div class="clear-block">
+      <span class="submitted">January 3, 2008 - 5:37pm — cwu (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-5746" class="active">linking to python25 works for me now</a></h3>
+
+    <div class="content">
+      Thanks for the response. Finally I got it work for me. The trick is to generate a "libpython25.a" file using pexports and dlltool (as described in many pages, e.g.  above "<a title="Link to http://sebsauvage.net" class="wikkly-a-www" href="http://sebsauvage.net/python/mingw.html" target="_blank">this very painful method</a>" link, step 2.). Or, this file can be downloaded from this link <a title="Link to http://mpan3.homeip.net" class="wikkly-a-www" href="http://mpan3.homeip.net/content/resources/libpython25.zip" target="_blank">libpython25.a</a> directly. By doing that, both cygwin and mingw ways work for me. <br/><br/>I have an impression that the requirement of "libpython2x.a" is not needed for new version of MinGW and python25. Is that the case for you two, Frank and Enrico? But apparently it does not work for me.<br/><br/>OK, finally, this is the list of everything I am using: <ol class="wikkly-ol"><li class="wikkly-ol-li1">ActivePython 2.5.1 </li><li class="wikkly-ol-li1">MinGW [installed using <b class="">MinGW-5.1.3.exe</b>, with <b class="">gcc (GCC) 3.4.5 (mingw special)</b> and <b class="">GNU ld version 2.17.50 20060824</b>] </li><li class="wikkly-ol-li1">cygwin/gcc-mingw [<b class="">gcc (GCC) 3.4.4 (cygming special, gdc 0.12, using dmd 0.125)</b> and <b class="">GNU ld version 2.17.50 20060817</b>] </li><li class="wikkly-ol-li1">pexports v0.43<br/><br/></li></ol>Thanks you all.<br/><br/><br/><br/><br/><div class='wikkly-generated-by'>Written in <a title='WikklyText 1.1.2 on Tue Apr  8 09:22:52 2008 [1.4k, 0.2s] ' class='wikkly-a-www' href='http://wikklytext.com'>WikklyText</a>.</div>
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/5746" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<div class="indented"><a id="comment-5766"></a>
+<div class="comment odd">
+
+  <div class="clear-block">
+      <span class="submitted">January 4, 2008 - 8:32am — frank</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-5766" class="active">Having to generate libpython25.a</a></h3>
+
+    <div class="content">
+      Correct, I did <b class="">not</b> have to generate <span class="wikkly-tt">libpython25.a</span> myself. I notice you are using ActivePython - could that have something do with it? Just a guess. 
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/5766" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+</div><a id="comment-5222"></a>
+<div class="comment even">
+
+  <div class="clear-block">
+      <span class="submitted">December 21, 2007 - 11:39am — Enrico (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-5222" class="active">linking pyton25.lib solved</a></h3>
+
+    <div class="content">
+      Hello.<br/><br/>I had a similar problem trying to compile my own library. Not sure it is the same as what you describe, but I solved it by <br/><br/>- updating mingw using the update application in my xp start menu - making sure I was using the pre-compiled version of python rather than the one that I compiled myself (using VC++8 &mdash; ouch!)<br/><br/>Not sure if the update was necessary or if it was just a problem due to trying to link to the wrong version.<br/><br/>Frank: Thanks to the great instructions! I wish I found them a few hours earlier.. :-)<br/><br/>Enrico
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/5222" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<a id="comment-4873"></a>
+<div class="comment odd">
+
+  <div class="clear-block">
+      <span class="submitted">December 14, 2007 - 9:00am — frank</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-4873" class="active">PyXML errors</a></h3>
+
+    <div class="content">
+      Hmm ... I tried this myself (I'm setup via Cygwin) and it worked. I remember when I used to use MinGW that I had to always get the latest bleeding-edge tools to make everything work. That's what annoyed me about MinGW and why I quit using it. I don't know if that helps any, but just wanted to note that it works for me on Cygwin (which is <span class="wikkly-code-inline">gcc&nbsp;(GCC)&nbsp;3.4.4&nbsp;(cygming&nbsp;special,&nbsp;gdc&nbsp;0.12,&nbsp;using&nbsp;dmd&nbsp;0.125)</span>).
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/4873" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+</div><a id="comment-2313"></a>
+<div class="comment even">
+
+  <div class="clear-block">
+      <span class="submitted">July 29, 2007 - 5:56pm — Tim (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-2313" class="active">Great stuff</a></h3>
+
+    <div class="content">
+      Awesome post! The difficulty of building Python extensions on Win32 has been irritating me for years. I usually use the ActiveState distro, but msvccompiler.py doesn't seem to like my Visual Studio 2005 (and their distro is compiled with VC7, and compiling with two different VC's is aparently asking for trouble in the linker).<br/><br/>Anyway, I've kept my ActiveState, but now have a Cygwin just for building extensions. What kept me from doing this before was the worry about linking in cygwin, but your post showed how to avoid that, so thanks!
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/2313" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<a id="comment-2204"></a>
+<div class="comment odd">
+
+  <div class="clear-block">
+      <span class="submitted">July 18, 2007 - 2:33pm — Mike Powers (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-2204" class="active">Thank You</a></h3>
+
+    <div class="content">
+      This posting was very useful. I had tried to use MinGW before but I never got the configuration of distutils right. Now I have to remember all those packages I tried to install before and go get them!
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/2204" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<a id="comment-2203"></a>
+<div class="comment even">
+
+  <div class="clear-block">
+      <span class="submitted">July 18, 2007 - 7:52am — <a href="http://billmill.org">Bill Mill</a> (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-2203" class="active">Python 2.4 supported building extensions with free tools too</a></h3>
+
+    <div class="content">
+      I wrote about it almost exactly a year ago: <a title="Link to http://billmill.org" class="wikkly-a-www" href="http://billmill.org/compile_python_on_cygwin" target="_blank">http://billmill.org/compile_python_on_cygwin</a>
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/2203" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<div class="indented"><a id="comment-2205"></a>
+<div class="comment odd">
+
+  <div class="clear-block">
+      <span class="submitted">July 18, 2007 - 3:57pm — frank</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-2205" class="active">Hard way</a></h3>
+
+    <div class="content">
+      Yep, that is the "painful" method noted in the links above. With Python 2.5, the import libs are already created for you. This painful method may still be required for other 3rd party libraries that refuse to compile under mingw/cygwin, but I'm not currently using any such libraries.
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/2205" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+</div><a id="comment-2160"></a>
+<div class="comment even">
+
+  <div class="clear-block">
+      <span class="submitted">July 11, 2007 - 3:30am — ErikW (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-2160" class="active">Additional Vista info:</a></h3>
+
+    <div class="content">
+      The info is great.  Some more comments if you use Vista and MinGW:<br/><br/><ul class="wikkly-ul"><li class="wikkly-ul-li1">Install MinGW directly under the root of your hard drive (i.e. C:\mingw) </li><li class="wikkly-ul-li1">You need to add references for the lib and libexe to <span class="wikkly-code-inline">path</span>. I do this though a batch file (see below) </li><li class="wikkly-ul-li1">In the same batch file I also set the environmental variables for the search paths to include files and libraries. </li><li class="wikkly-ul-li1">The batch file was found somewhere on the internets, but I've forgotten where. </li><li class="wikkly-ul-li1">This worked for PyCrypto under Vista Ultimate, but YMMW ;-)<br/><br/></li></ul><hr class="wikkly-separator"/><div class="wikkly-code-block">@echo&nbsp;off<br/><br/>echo&nbsp;MinGW&nbsp;Enviroment&nbsp;Command&nbsp;Console<br/>echo&nbsp;....<br/>echo&nbsp;....<br/>@set&nbsp;MINGWROOT=C:\MinGW<br/>@set&nbsp;MINGWBIN=%MINGWROOT%\bin<br/>@set&nbsp;MINGWINCLUDE=%MINGWROOT%\include<br/>@set&nbsp;MINGWLIB=%MINGWROOT%\lib<br/>@set&nbsp;MINGWLIBEXEC=%MINGWROOT%\libexec\gcc\mingw32\3.4.5<br/>@set&nbsp;MINGWBIN2=%MINGWROOT%\mingw32\bin<br/>@set&nbsp;MINGWLIB2=%MINGWROOT%\mingw32\lib\ldscripts<br/>@set&nbsp;MINGW=%MINGWROOT%;%MINGWBIN%;%MINGWINCLUDE%;%MINGWLIB%;%MINGWLIBEXEC%;%MINGWLIB2%;%MINGWLIB2%<br/><br/>rem&nbsp;to&nbsp;add&nbsp;more&nbsp;resource&nbsp;paths&nbsp;just&nbsp;use&nbsp;the&nbsp;set&nbsp;command&nbsp;like&nbsp;above&nbsp;and&nbsp;the&nbsp;and&nbsp;it&nbsp;to&nbsp;the&nbsp;set&nbsp;PATH&nbsp;like&nbsp;below<br/><br/>@set&nbsp;Path=%MINGW%;%Path%</div> <hr class="wikkly-separator"/><div class='wikkly-generated-by'>Written in <a title='WikklyText 1.1.2 on Tue Apr  8 09:22:54 2008 [1.7k, 0.1s] ' class='wikkly-a-www' href='http://wikklytext.com'>WikklyText</a>.</div>
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/2160" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<a id="comment-1664"></a>
+<div class="comment odd">
+
+  <div class="clear-block">
+      <span class="submitted">May 24, 2007 - 12:34pm — er (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-1664" class="active">this was very helpful</a></h3>
+
+    <div class="content">
+      <p>thanks for putting this info up!</p>
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/1664" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<a id="comment-1619"></a>
+<div class="comment even">
+
+  <div class="clear-block">
+      <span class="submitted">May 19, 2007 - 5:46pm — jaco (not verified)</span>
+  
+  
+  
+    <h3><a href="/main/python/build-windows-extensions#comment-1619" class="active">great work</a></h3>
+
+    <div class="content">
+      <p>at last now compiling stuff on win32 using mingw is easy, great article</p>
+<p>thanks</p>
+    </div>
+
+  </div>
+
+      <div class="links"><ul class="links"><li class="first last comment_reply"><a href="/main/comment/reply/78/1619" class="comment_reply">reply</a></li>
+</ul></div>
+  </div>
+<form action="/main/python/build-windows-extensions"  method="post" id="comment-controls">
+<div><div class="box">
+
+  <h2>Comment viewing options</h2>
+
+  <div class="content"><div class="container-inline"><input type="hidden" name="form_id" id="edit-comment-controls" value="comment_controls"  />
+<div class="form-item">
+ <select name="mode" class="form-select" id="edit-mode" ><option value="1">Flat list - collapsed</option><option value="2">Flat list - expanded</option><option value="3">Threaded list - collapsed</option><option value="4" selected="selected">Threaded list - expanded</option></select>
+</div>
+<div class="form-item">
+ <select name="order" class="form-select" id="edit-order" ><option value="1" selected="selected">Date - newest first</option><option value="2">Date - oldest first</option></select>
+</div>
+<div class="form-item">
+ <select name="comments_per_page" class="form-select" id="edit-comments-per-page" ><option value="10">10 comments per page</option><option value="30">30 comments per page</option><option value="50" selected="selected">50 comments per page</option><option value="70">70 comments per page</option><option value="90">90 comments per page</option><option value="150">150 comments per page</option><option value="200">200 comments per page</option><option value="250">250 comments per page</option><option value="300">300 comments per page</option></select>
+</div>
+<input type="submit" name="op" id="edit-submit" value="Save settings"  class="form-submit" />
+</div><div class="description">Select your preferred way to display the comments and click "Save settings" to activate your changes.</div></div>
+</div>
+
+</div></form>
+<div class="box">
+
+  <h2>Post new comment</h2>
+
+  <div class="content"><form action="/main/comment/reply/78"  method="post" id="comment-form">
+<div><div class="form-item">
+ <label for="edit-name">Your name: </label>
+ <input type="text" maxlength="60" name="name" id="edit-name"  size="30" value="Anonymous" class="form-text" />
+</div>
+<div class="form-item">
+ <label for="edit-mail">E-mail: </label>
+ <input type="text" maxlength="64" name="mail" id="edit-mail"  size="30" value="" class="form-text" />
+ <div class="description">The content of this field is kept private and will not be shown publicly.</div>
+</div>
+<div class="form-item">
+ <label for="edit-homepage">Homepage: </label>
+ <input type="text" maxlength="255" name="homepage" id="edit-homepage"  size="30" value="" class="form-text" />
+</div>
+<div class="form-item">
+ <label for="edit-subject">Subject: </label>
+ <input type="text" maxlength="64" name="subject" id="edit-subject"  size="60" value="" class="form-text" />
+</div>
+<div class="form-item">
+ <label for="edit-comment">Comment: <span class="form-required" title="This field is required.">*</span></label>
+ <textarea cols="60" rows="15" name="comment" id="edit-comment"  class="form-textarea resizable required"></textarea>
+</div>
+<fieldset class=" collapsible collapsed"><legend>Input format</legend><div class="form-item">
+ <label class="option"><input type="radio" name="format" value="1"   class="form-radio" /> Filtered HTML</label>
+ <div class="description"><ul class="tips"><li>Allowed HTML tags: &lt;a&gt; &lt;em&gt; &lt;strong&gt; &lt;cite&gt; &lt;code&gt; &lt;ul&gt; &lt;ol&gt; &lt;li&gt; &lt;dl&gt; &lt;dt&gt; &lt;dd&gt;</li><li>Lines and paragraphs break automatically.</li></ul></div>
+</div>
+<div class="form-item">
+ <label class="option"><input type="radio" name="format" value="8"  checked="checked"  class="form-radio" /> WikklyText, Restricted Mode</label>
+ <div class="description"><ul class="tips"><li>Write content in <a href='http://wikklytext.com' target='_blank'>WikklyText</a> format - <strong>Restricted (Safe) Mode</strong>.<br><br>For detailed help, see the <a href='/main/modules/wikkly_fmt/help.html' target='_blank'>WikklyText Reference</a></li></ul></div>
+</div>
+<p><a href="/main/filter/tips">More information about formatting options</a></p></fieldset>
+<input type="hidden" name="form_id" id="edit-comment-form" value="comment_form"  />
+<input type="submit" name="op" id="edit-preview" value="Preview comment"  class="form-submit" />
+<input type="submit" name="op" id="edit-submit" value="Post comment"  class="form-submit" />
+
+</div></form>
+</div>
+</div>
+</div>          <span class="clear"></span>
+                    <div id="footer"><b>boodebr.org</b> is powered by: <a href="http://gentoo.org">Linux</a>, <a href="http://apache.org">Apache</a>,  <a href="http://drupal.org">Drupal</a>, and <a href="http://boodebr.org/software/wikklytext">WikklyText</a>.
+</div>
+      </div></div></div></div> <!-- /.left-corner, /.right-corner, /#squeeze, /#center -->
+
+              <div id="sidebar-right" class="sidebar">
+          <div class="block block-theme"><form action="/main/search/node"  method="post" id="search-theme-form">
+<div><div id="search" class="container-inline"><div class="form-item">
+ <input type="text" maxlength="128" name="search_theme_form_keys" id="edit-search-theme-form-keys"  size="15" value="" title="Enter the terms you wish to search for." class="form-text" />
+</div>
+<input type="submit" name="op" id="edit-submit" value="Search"  class="form-submit" />
+<input type="hidden" name="form_id" id="edit-search-theme-form" value="search_theme_form"  />
+</div>
+</div></form>
+</div>          <div id="block-block-1" class="clear-block block block-block">
+
+
+  <div class="content"><p><span style="font-size: .8em; color: #888888">Sponsored Links</span></p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-9943819643552187";
+/* 120x240, created 2/29/08 */
+google_ad_slot = "0818021291";
+google_ad_width = 120;
+google_ad_height = 240;
+//-->
+</script><script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script></div>
+</div>
+<div id="block-statistics-0" class="clear-block block block-statistics">
+
+  <h2>Popular content</h2>
+
+  <div class="content"><div class="item-list"><h3>All time:</h3><ul><li><a href="/main/python/all-about-python-and-unicode">All About Python and Unicode</a></li><li><a href="/main/node/24">MYOML #6: Metainfo, notes, warnings, and more HTML tags</a></li><li><a href="/main/python/build-windows-extensions" class="active">Building Python extensions for Windows with only free tools</a></li><li><a href="/main/python/tourist/taking-exception">The Python Tourist #2: Taking Exception</a></li><li><a href="/main/python/tourist/mutable-obj-as-default-arg">The Python Tourist #1: Passing Mutable Objects as Default Args</a></li></ul></div><br /><div class="item-list"><h3>Last viewed:</h3><ul><li><a href="/main/node/105">boodebr 0.8.1 (Python) released</a></li><li><a href="/main/python/all-about-python-and-unicode">All About Python and Unicode</a></li><li><a href="/main/python/tourist/forgetting-how-cmp-works">The Python Tourist #3: Forgetting how cmp() works ... no problem!</a></li><li><a href="/main/node/29">Thoughts on bundling pysqlite in Python 2.5</a></li><li><a href="/main/python/build-windows-extensions" class="active">Building Python extensions for Windows with only free tools</a></li></ul></div></div>
+</div>
+<div id="block-user-0" class="clear-block block block-user">
+
+  <h2>User login</h2>
+
+  <div class="content"><form action="/main/python/build-windows-extensions?destination=node%2F78"  method="post" id="user-login-form">
+<div><div class="form-item">
+ <label for="edit-name">Username: <span class="form-required" title="This field is required.">*</span></label>
+ <input type="text" maxlength="60" name="name" id="edit-name"  size="15" value="" class="form-text required" />
+</div>
+<div class="form-item">
+ <label for="edit-pass">Password: <span class="form-required" title="This field is required.">*</span></label>
+ <input type="password" name="pass" id="edit-pass"  maxlength="60"  size="15"  class="form-text required" />
+</div>
+<input type="submit" name="op" id="edit-submit" value="Log in"  class="form-submit" />
+<div class="item-list"><ul><li><a href="/main/user/register" title="Create a new user account.">Create new account</a></li><li><a href="/main/user/password" title="Request new password via e-mail.">Request new password</a></li></ul></div><input type="hidden" name="form_id" id="edit-user-login-block" value="user_login_block"  />
+
+</div></form>
+</div>
+</div>
+        </div>
+      
+    </div> <!-- /container -->
+  </div>
+<!-- /layout -->
+
+    </body>
+</html>
