@@ -58,7 +58,7 @@ class CameraParameters:
                          'Rx', 'Ry', 'Rz', 'r1', 'r2', 'r3', 'r4', 'r5',
                          'r6', 'r7', 'r8', 'r9']
                 def createParam(x): self[x]=0.0
-                map(createParam, parms)
+                list(map(createParam, parms)) #map() function returns iterator in python 3. This is a workaround.
 
                 # copy an existing map if one was provided
                 if existing is not None:
@@ -66,7 +66,7 @@ class CameraParameters:
                                 self[key] = item
                 
                 # set the camera model if specified
-                if keywords.has_key('model'):
+                if 'model' in keywords.keys():
                         model = keywords['model']
                         if model == 'photometrics-star-I':
                                 self.Ncx = 576
@@ -141,7 +141,7 @@ class CameraParameters:
                                 
                 # construct an artificial camera if image_dim has been
                 #  provided
-                elif keywords.has_key('image_dim'):
+                elif 'image_dim' in keywords.keys():
                         image_dim = keywords['image_dim']
                         self.Ncx = image_dim[0]
                         self.Nfx = self.Ncx
@@ -341,7 +341,8 @@ class CameraParameters:
                          'Rx', 'Ry', 'Rz', 'r1', 'r2', 'r3', 'r4', 'r5',
                          'r6', 'r7', 'r8', 'r9']
                 for p in parms:
-                        s = string.ljust(p, 7) + ("= %f\n" % self[p])
+                        #s = string.ljust(p, 7) + ("= %f\n" % self[p]) #old, python 2 syntax
+                        s = p.ljust(7) + ("= %f\n" % self[p])
                         str += s
                 return str
         def __repr__(self):
