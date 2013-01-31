@@ -228,7 +228,7 @@ class CameraParameters:
                 xw, yw, zw = coord
                 xc = self.r1 * xw + self.r2 * yw + self.r3 * zw + self.Tx
                 yc = self.r4 * xw + self.r5 * yw + self.r6 * zw + self.Ty
-                zc = self.r7 * xw + self.r8 * yw + self.r8 * zw + self.Tz
+                zc = self.r7 * xw + self.r8 * yw + self.r9 * zw + self.Tz
                 return (xc, yc, zc)
 
         def camera2world(self, coord):
@@ -303,17 +303,19 @@ class CameraParameters:
         def setBlenderCamera(self, camobj, xres, yres):
                 """
                 """
-                import Blender
-                from Blender import Mathutils
-                w2c = Mathutils.Matrix(
-                        [self.r1, self.r4, self.r7, 0.0],
-                        [self.r2, self.r5, self.r8, 0.0],
-                        [self.r3, self.r6, self.r9, 0.0],
-                        [self.Tx, self.Ty, self.Tz, 1.0]
-                )
-                rot180x = Mathutils.RotationMatrix(180, 4, 'x')
-                c2w = Mathutils.CopyMat(w2c * rot180x)
+                #import Blender #old, Blender 2.4 and before stuff
+                #from Blender import Mathutils
+				import mathutils
+                w2c = mathutils.Matrix((
+                        (self.r1, self.r4, self.r7, 0.0),
+                        (self.r2, self.r5, self.r8, 0.0),
+                        (self.r3, self.r6, self.r9, 0.0),
+                        (self.Tx, self.Ty, self.Tz, 1.0)
+                ))
+                rot180x = mathutils.Matrix.Rotation(180, 4, 'X')
+                c2w = mathutils.Matrix.copy(w2c * rot180x)
                 c2w.invert()
+				#till this line, it is updated to Blender 2.65. After this line it needs to be updated!
                 camobj.setMatrix(c2w)
                 cam = camobj.getData()
                 asp = float(yres) / float(yres)
@@ -398,7 +400,7 @@ def calibrate(target_type, optimization_type, calibration_data, camera_params,
         xo,yo,zo = 0.0,0.0,0.0
         def addOfs(c):
                 return (c[0]+xo, c[1]+yo, c[2]+zo, c[3], c[4])
-        ofsCalData = map(addOfs, calibration_data)
+        ofsCalData = list(map(addOfs, calibration_data))
 
         # perform camera calibration
         if target_type == 'coplanar' and optimization_type == 'three-param':
