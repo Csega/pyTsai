@@ -305,7 +305,7 @@ class CameraParameters:
                 This function is now fully compatible with Blender 2.65.
                 (Haven't tested yet.)
                 """
-				import mathutils
+                import mathutils
                 w2c = mathutils.Matrix((
                         (self.r1, self.r4, self.r7, 0.0),
                         (self.r2, self.r5, self.r8, 0.0),
@@ -315,10 +315,10 @@ class CameraParameters:
                 rot180x = mathutils.Matrix.Rotation(180, 4, 'X')
                 c2w = mathutils.Matrix.copy(w2c * rot180x)
                 c2w.invert()
-				camobj.matrix_world = c2w
+                camobj.matrix_world = c2w
                 cam = camobj.data
                 #asp = float(yres) / float(yres) #isn't it a semantic error???
-				asp = float(xres) / float(yres) #test with this - maybe its yres/xres
+                asp = float(xres) / float(yres) #test with this - maybe its yres/xres
                 cam.lens = 16.0 / (asp * math.tan(self.getFOVx() / 2.0))
 
         def iterkeys(self):
