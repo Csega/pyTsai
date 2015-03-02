@@ -26,8 +26,10 @@ setup(
         name = 'PyTsai',
         version = '1.0',
         description = 'Tsai camera calibration.',
-        author = 'Jonathan Merritt',
-        author_email = 'j.merritt@pgrad.unimelb.edu.au',
+        author = 'Jonathan Merritt, Gabor Cseh',
+        author_email = 'j.merritt@pgrad.unimelb.edu.au, csega@mailbox.hu',
+        keywords = "tsai automatic calibration python blender",
+		url = "https://github.com/Csega/pyTsai",   # project home page, if any
         ext_modules = [ pytsai_ext ],
         py_modules = [ 'Tsai' ]
 )
